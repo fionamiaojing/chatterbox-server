@@ -74,5 +74,99 @@ describe('server', function() {
     });
   });
 
+  it('should respond to OPTIONS requests for /classes/messages with a 200 status code', function(done) {
+    var requestParams = {method: 'OPTIONS',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+    }; 
+    
+    request(requestParams, function(error, response, body) {
+      expect(response.statusCode).to.equal(200);
+      done();
+    });   
+  });
 
+  it('should delete message if it is found on the server and return 200 status code', function(done) {
+    var requestParams = {method: 'POST',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+      json: {
+        username: 'Mac',
+        text: 'Read documentation!'}
+    };
+
+    request(requestParams, function(error, response, body) {
+      // Now if we request the log, that message we posted should be there:
+      var deleteParams = {method: 'DELETE',
+        uri: 'http://127.0.0.1:3000/classes/messages',
+        json: {
+          username: 'Mac',
+          text: 'Read documentation!'
+        }
+      };
+
+      request(deleteParams, function(error, response, body) {
+        // console.log(response);
+        expect(response.statusCode).to.equal(200);
+        done();
+      });
+    });
+  });
+
+  it('should return 204 status code if delete request message is not found on the server', function(done) {
+    var requestParams = {method: 'POST',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+      json: {
+        username: 'Jon',
+        text: 'Read documentation!'}
+    };
+
+    request(requestParams, function(error, response, body) {
+      // Now if we request the log, that message we posted should be there:
+      var deleteParams = {method: 'DELETE',
+        uri: 'http://127.0.0.1:3000/classes/messages',
+        json: {
+          username: 'Mac',
+          text: 'Read documentation!'
+        }
+      };
+
+      request(deleteParams, function(error, response, body) {
+        // console.log(response);
+        expect(response.statusCode).to.equal(204);
+        done();
+      });
+    });
+  });
+
+  it('should be able to store duplicate messages on the server', function(done) {
+    var requestParams1 = {method: 'POST',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+      json: {
+        username: 'Jon',
+        text: 'Read documentation!',
+        timestamp: '3:40PM'}
+    };
+
+    var requestParams2 = {method: 'POST',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+      json: {
+        username: 'Jon',
+        text: 'Read documentation!',
+        timestamp: '3:41PM'}
+    };
+    
+    request(requestParams1, function(error, response, body) {
+      // Now if we request the log, that message we posted should be there:
+
+      request(requestParams2, function(error, response, body) {
+        // console.log(response);
+        request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
+          var messages = JSON.parse(body).results;
+          console.log(JSON.stringify(messages));
+          expect(messages[0].username).to.equal(messages[1].username);
+          expect(messages[0].text).to.equal(messages[1].text);
+          done();
+        });
+      });
+    });
+  });
 });
