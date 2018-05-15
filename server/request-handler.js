@@ -12,6 +12,8 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+var storageObj = {};
+
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -32,35 +34,40 @@ var requestHandler = function(request, response) {
 
   // The outgoing status.
   var statusCode;
+  var outputObj = {results: []};
   
   var headers = defaultCorsHeaders;
   headers['Content-Type'] = 'application/json';
   
-  if (request.method === 'GET') {
+  if (request.method === 'GET' && request.url === '/classes/messages') {
     statusCode = 200;
+    outputObj.results = Object.keys(storageObj).map( (obj) => JSON.parse(obj) );
     response.writeHead(statusCode, headers);
-    response.end();
-  } else if (request.method === 'POST') {
-    var body = [];
+    response.end(JSON.stringify(outputObj));
+
+  } else if (request.method === 'POST' && request.url === '/classes/messages') {
     statusCode = 201;
-    request.on('data', function(data) {
-      body.push(data); 
-      // console.log(body);
-    }).on('end', function() {
-      body = Buffer.concat(body).toString();
-      body = JSON.parse(body);
-      console.log(typeof body);
+    var dataArray = [];
+    request.on('data', (data) => {
+      dataArray.push(data); 
+    }).on('end', () => {
+      dataArray = Buffer.concat(dataArray).toString();
+      storageObj[dataArray] = dataArray;
       response.writeHead(statusCode, headers);
       response.end();
-    }).on('error', function(err) {
-      console.error(err);
-    });
-    
-    
-    
-    
-    
+    }).on('error', (err) => console.error(err) );
+
+  } else if (request.method === 'OPTIONS' && request.url === '/classes/messages') {
+    // HANDLE OPTIONS METHOD STUFF HERE!
+    statusCode = '200 OK';
+    response.writeHead(statusCode, headers);
+    response.end();
+  } else {
+    statusCode = 404;
+    response.writeHead(statusCode, headers);
+    response.end();
   }
+};
 
   // See the note below about CORS headers.
   // var headers = defaultCorsHeaders;
@@ -88,7 +95,7 @@ var requestHandler = function(request, response) {
   // console.log(responseBody);
   // response.write(JSON.stringify(responseBody));
   // response.end();
-};
+
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
@@ -108,4 +115,4 @@ var defaultCorsHeaders = {
 
 
 // NEED TO EXPORT FUNCTION HERE!!!
-module.exports = requestHandler;
+module.exports.requestHandler = requestHandler;
