@@ -32,14 +32,9 @@ var requestHandler = function(request, response) {
 
   // The outgoing status.
   var statusCode;
-  var responseBody = {};
   
   var headers = defaultCorsHeaders;
   headers['Content-Type'] = 'application/json';
-  responseBody.headers = headers;
-  responseBody.method = request.method;
-  responseBody.url = request.url;
-  
   
   if (request.method === 'GET') {
     statusCode = 200;
@@ -53,9 +48,9 @@ var requestHandler = function(request, response) {
       // console.log(body);
     }).on('end', function() {
       body = Buffer.concat(body).toString();
-      responseBody.body = JSON.parse(body);
+      body = JSON.parse(body);
+      console.log(typeof body);
       response.writeHead(statusCode, headers);
-      response.write(JSON.stringify(responseBody));
       response.end();
     }).on('error', function(err) {
       console.error(err);

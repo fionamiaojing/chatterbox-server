@@ -66,10 +66,10 @@ class App {
       data: JSON.stringify(messageObj),
       contentType: 'application/json',
       success: (data) => {
-        console.log(`chatterbox: Message sent ${data}`)
+        console.log(`chatterbox: Message sent ${data}`);
         app.fetch();
       },
-      error: () => { console.error(`chatterbox: Failed to send message`); },
+      error: () => { console.error('chatterbox: Failed to send message'); },
     });
   }
 
@@ -84,7 +84,7 @@ class App {
         this.parseData(data.results);
         this.renderPage();
       },
-      error: () => { console.error(`chatterbox: Failed to GET`); }
+      error: () => { console.error('chatterbox: Failed to GET'); }
     });
   }
 
@@ -135,7 +135,7 @@ class App {
 
   renderPage() {
     this.clearMessages();
-    let $createRoom = $('<option>').attr('value', 'Create Room').text('Create Room')
+    let $createRoom = $('<option>').attr('value', 'Create Room').text('Create Room');
     $('#roomSelect').append($createRoom);
     if (!this.rooms[this.currentRoom]) {
       this.rooms[this.currentRoom] = [];
