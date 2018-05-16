@@ -11,7 +11,7 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-
+var fs = require('fs');
 var storageObj = {};
 
 var defaultCorsHeaders = {
@@ -35,9 +35,17 @@ var requestHandler = function(request, response) {
   console.log(request.url);
   if (request.method === 'GET' && request.url.startsWith('/classes/messages')) {
     statusCode = 200;
-    outputObj.results = Object.keys(storageObj).map( (obj) => JSON.parse(obj) );
-    response.writeHead(statusCode, headers);
-    response.end(JSON.stringify(outputObj));
+    //read data from file using fs module
+    fs.readFile('messageStorage.txt', (err, data) => {
+      if (err) { throw err; }
+      console.log(JSON.stringify(data.toString().split('/n').slice(0, -1)));
+      outputObj.results = data.toString().split('/n').slice(0, -1).map(message => JSON.parse(message));
+      console.log(outputObj);
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify(outputObj));
+    });
+    //outputObj.results = Object.keys(storageObj).map( (obj) => JSON.parse(obj) );
+    
 
   } else if (request.method === 'POST' && request.url.startsWith('/classes/messages')) {
     statusCode = 201;
@@ -45,8 +53,13 @@ var requestHandler = function(request, response) {
     request.on('data', (data) => {
       dataArray.push(data); 
     }).on('end', () => {
-      dataArray = Buffer.concat(dataArray).toString();
-      storageObj[dataArray] = dataArray;
+      dataArray = Buffer.concat(dataArray).toString() + '/n';
+      //storageObj[dataArray] = dataArray;
+      fs.appendFile('messageStorage.txt', dataArray, (err) => {
+        if (err) { throw err; }
+        console.log('The "data to append" was appended to file!');
+      });
+      //write data to file using fs module
       response.writeHead(statusCode, headers);
       console.log('testing this ----------------------->', JSON.stringify(storageObj));
       response.end(JSON.stringify('Message sent'));
